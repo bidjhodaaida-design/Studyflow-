@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyFlow | Premium SaaS Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
+
+        body {
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+
+        .container {
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        .card:hover { transform: translateY(-4px); border-color: var(--primary); }
+
+        h3 { font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+        input, select {
+            width: 100%; padding: 12px; background: #0f172a; border: 1px solid var(--border);
+            border-radius: 8px; color: white; margin-bottom: 10px;
+        }
+
+        button {
+            background: var(--primary); color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%;
+        }
+
+        button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+
+        /* Timer Pomodoro */
+        .timer-display { font-size: 2.5rem; font-weight: 700; text-align: center; margin: 10px 0; font-variant-numeric: tabular-nums; }
+
+        /* Gamificação Visual */
+        .xp-bar { height: 8px; background: #334155; border-radius: 10px; margin-top: 5px; overflow: hidden; }
+        .xp-progress { height: 100%; background: var(--warning); width: 0%; }
+
+        /* Task styling com Prioridade */
+        .task {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #334155; padding: 12px; border-radius: 10px; margin-top: 10px;
+            border-left: 4px solid var(--primary);
+        }
+        .priority-high { border-left-color: var(--danger); }
+        .priority-med { border-left-color: var(--warning); }
+        .task.completed { opacity: 0.5; text-decoration: line-through; }
+
+        .progress-bar { height: 10px; background: #334155; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress { height: 100%; background: var(--success); width: 0%; transition: width 0.5s ease; }
+
+        .badge { background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <span>🚀 StudyFlow</span>
+    <div id="userRank" class="badge">Nível 1: Iniciante</div>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h3>👤 Perfil do Estudante</h3>
+        <p id="userBox" style="font-weight: 600;">Bem-vindo</p>
+        <div style="margin-top: 15px;">
+            <div style="display:flex; justify-content: space-between; font-size: 0.8rem;">
+                <span>XP Total: <span id="xpValue">0</span></span>
+                <span id="streak">🔥 0 dias</span>
+            </div>
+            <div class="xp-bar"><div id="xpProgress" class="xp-progress"></div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>⏱️ Foco Pomodoro</h3>
+        <div class="timer-display" id="timer">25:00</div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="startTimer()">Iniciar</button>
+            <button class="secondary" onclick="resetTimer()">Resetar</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>➕ Nova Missão</h3>
+        <input id="taskInput" placeholder="O que vamos estudar?" />
+        <select id="priorityInput">
+            <option value="low">Prioridade: Baixa</option>
+            <option value="med">Prioridade: Média</option>
+            <option value="high">Prioridade: Alta</option>
+        </select>
+        <button onclick="addTask()">Adicionar à Lista</button>
+    </div>
+
+    <div class="card">
+        <h3>📊 Status do Dia</h3>
+        <div class="progress-bar"><div id="progress" class="progress"></div></div>
+        <p id="progressText" style="text-align: right; font-size: 0.8rem;">0% concluído</p>
+        <p id="goalText" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-dim);">Meta: não definida</p>
+    </div>
+
+    <div class="card" style="grid-column: span 1;">
+        <h3>📅 Tarefas Ativas</h3>
+        <div id="taskList"></div>
+        <button class="secondary" style="margin-top: 15px; font-size: 0.8rem;" onclick="exportData()">💾 Exportar Dados (JSON)</button>
+    </div>
+
+    <div class="card">
+        <h3>📚 Disciplinas & Metas</h3>
+        <input id="subjectInput" placeholder="Nova disciplina..." />
+        <button class="secondary" onclick="addSubject()">Vincular Disciplina</button>
+        <ul id="subjectList" style="margin-top: 10px; font-size: 0.9rem;"></ul>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+        <select id="goal" onchange="setGoal()">
+            <option value="">Definir Meta de Tempo</option>
+            <option>1 hora</option>
+            <option>2 horas</option>
+            <option>4 horas</option>
+        </select>
+    </div>
+</div>
+
+<script>
+    // ESTADO DA APLICAÇÃO [cite: 14, 15]
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let streak = parseInt(localStorage.getItem("streak")) || 0;
+    let xp = parseInt(localStorage.getItem("xp")) || 0;
+    let subjects = JSON.parse(localStorage.getItem("subjects")) || [];
+    let goal = localStorage.getItem("goal") || "";
+    let user = localStorage.getItem("user") || "";
+
+    // CONFIGURAÇÕES DO TIMER
+    let timerInterval;
+    let timeLeft = 1500;
+
+    // INICIALIZAÇÃO [cite: 4, 16]
+    window.onload = () => {
+        if(!user) {
+            user = prompt("Qual o seu nome, Recruta?");
+            localStorage.setItem("user", user || "Estudante");
+        }
+        document.getElementById("userBox").innerText = `Olá, ${user}! 🎯`;
+        renderTasks();
+        renderSubjects();
+        updateProgress();
+        updateXPVisuals();
+    };
+
+    // FUNCIONALIDADES CORE (SEM ALTERAÇÕES NAS LÓGICAS ORIGINAIS) [cite: 3, 5, 6, 8]
+    function addTask(){
+        const input = document.getElementById('taskInput');
+        const priority = document.getElementById('priorityInput').value;
+        if(input.value.trim() === '') return;
+
+        tasks.push({name: input.value, done: false, priority: priority});
+        input.value = '';
+        saveAndRender();
+    }
+
+    function toggleTask(i){
+        tasks[i].done = !tasks[i].done;
+        if(tasks[i].done) {
+            xp += 50; // Adição de Gamificação [cite: 29, 30]
+            playSuccessSound(); // Feedback sonoro visual [cite: 40]
+        }
+        saveAndRender();
+    }
+
+    function renderTasks(){
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+        tasks.forEach((t, index) => {
+            const div = document.createElement('div');
+            div.className = `task ${t.done ? 'completed' : ''} priority-${t.priority}`;
+            div.innerHTML = `
+                <span>${t.name}</span>
+                <button onclick="toggleTask(${index})" style="width: auto; padding: 5px 10px; background: ${t.done ? 'var(--success)' : 'transparent'}; border: 1px solid var(--border)">
+                    ${t.done ? '✓' : 'Fazer'}
+                </button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // GAMIFICAÇÃO & XP [cite: 31, 32]
+    function updateXPVisuals() {
+        const level = Math.floor(xp / 500) + 1;
+        const currentXP = xp % 500;
+        document.getElementById("userRank").innerText = `Nível ${level}: ${level > 2 ? 'Mestre' : 'Iniciante'}`;
+        document.getElementById("xpValue").innerText = xp;
+        document.getElementById("xpProgress").style.width = (currentXP / 500 * 100) + "%";
+    }
+
+    // TIMER POMODORO [cite: 33]
+    function startTimer() {
+        if(timerInterval) return;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("Tempo de foco encerrado! Descanse.");
+                resetTimer();
+            }
+        }, 1000);
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timeLeft = 1500;
+        updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        document.getElementById("timer").innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // INFRAESTRUTURA [cite: 41]
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({tasks, xp, streak}));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "studyflow_backup.json");
+        downloadAnchorNode.click();
+    }
+
+    // AUXILIARES [cite: 9, 10, 11, 12]
+    function updateProgress(){
+        let done = tasks.filter(t=>t.done).length;
+        let percent = tasks.length === 0 ? 0 : Math.round((done/tasks.length)*100);
+        document.getElementById('progress').style.width = percent + '%';
+        document.getElementById('progressText').innerText = percent + '%';
+        if(percent === 100 && tasks.length > 0) streak++;
+        document.getElementById('streak').innerText = `🔥 ${streak} dias`;
+    }
+
+    function saveAndRender() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        localStorage.setItem("xp", xp);
+        localStorage.setItem("streak", streak);
+        renderTasks();
+        updateProgress();
+        updateXPVisuals();
+    }
+
+    function setGoal(){
+        goal = document.getElementById('goal').value;
+        localStorage.setItem("goal", goal);
+        document.getElementById('goalText').innerText = '🎯 Meta: ' + goal;
+    }
+
+    function addSubject(){
+        const input = document.getElementById('subjectInput');
+        if(input.value.trim()) subjects.push(input.value);
+        input.value = '';
+        localStorage.setItem("subjects", JSON.stringify(subjects));
+        renderSubjects();
+    }
+
+    function renderSubjects(){
+        const list = document.getElementById('subjectList');
+        list.innerHTML = '';
+        subjects.forEach(s => list.innerHTML += `<li>📖 ${s}</li>`);
+    }
+
+    function playSuccessSound() {
+        // Feedback visual simulando o "som" de sucesso [cite: 40]
+        const header = document.querySelector('header');
+        header.style.backgroundColor = 'var(--success)';
+        setTimeout(() => header.style.backgroundColor = 'rgba(30, 41, 59, 0.8)', 300);
+    }
+</script>
+</body>
+</html>
